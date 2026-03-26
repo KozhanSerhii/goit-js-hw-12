@@ -14,10 +14,10 @@ form.addEventListener('submit', async event => {
   event.preventDefault();
   
   query = event.currentTarget.elements['search-text'].value.trim();
-  page = 1; 
+  page = 1;
 
   if (query === "") {
-    iziToast.warning({ message: "Please fill the search field" });
+    iziToast.warning({ message: "Please fill the search field", position: 'topRight' });
     return;
   }
 
@@ -29,17 +29,28 @@ form.addEventListener('submit', async event => {
     const data = await getImagesByQuery(query, page);
     
     if (data.hits.length === 0) {
-      iziToast.error({ message: "Sorry, there are no images matching your search query." });
+      iziToast.error({ 
+        message: "Sorry, there are no images matching your search query. Please try again!", 
+        position: 'topRight' 
+      });
       return;
     }
 
     createGallery(data.hits);
-
+    
+    // Перевірка: чи є сенс показувати кнопку "Load more"
     if (data.totalHits > perPage) {
       showLoadMoreButton();
+    } else {
+      // Якщо результатів мало і вони влізли на 1-шу сторінку
+      hideLoadMoreButton();
+      iziToast.info({ 
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight'
+      });
     }
   } catch (error) {
-    iziToast.error({ message: "Error fetching data!" });
+    iziToast.error({ message: "Error fetching data!", position: 'topRight' });
   } finally {
     hideLoader();
     form.reset();
@@ -48,7 +59,7 @@ form.addEventListener('submit', async event => {
 
 loadMoreBtn.addEventListener('click', async () => {
   page += 1;
-  hideLoadMoreButton();
+  hideLoadMoreButton(); 
   showLoader();
 
   try {
@@ -58,14 +69,18 @@ loadMoreBtn.addEventListener('click', async () => {
     smoothScroll();
 
     const totalPages = Math.ceil(data.totalHits / perPage);
+    
     if (page >= totalPages) {
       hideLoadMoreButton();
-      iziToast.info({ message: "We're sorry, but you've reached the end of search results." });
+      iziToast.info({ 
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight'
+      });
     } else {
       showLoadMoreButton();
     }
   } catch (error) {
-    iziToast.error({ message: "Error loading more images!" });
+    iziToast.error({ message: "Error loading more images!", position: 'topRight' });
   } finally {
     hideLoader();
   }
